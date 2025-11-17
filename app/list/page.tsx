@@ -1,35 +1,41 @@
-'use client';
-import React from 'react';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import prisma from '@/lib/prisma';
 import ItemList from '../../components/ItemList';
+import { Suspense } from 'react';
 
 type ItemType = {
-  id: string;
+  id: number;
   title: string;
-  description?: string;
+  description: string | null;
   createdAt: string;
-  done?: boolean;
-  priority?: boolean;
+  done: boolean;
+  priority: boolean;
+  category: string | null;
 };
 
-export default function ListPage() {
-  const [items, setItems] = useLocalStorage<ItemType[]>('wishlist-items', []);
+async function getWishlistItems() {
+  const items = await prisma.wishlistItem.findMany({
+   orderBy: [
+  { priority: 'desc' },
+  { done: 'asc' },
+  { createdAt: 'desc' }
+]  });
 
-  const sortedItems = [...items].sort((a, b) => {
-    if (a.priority && !b.priority) return -1;
-    if (!a.priority && b.priority) return 1;
-    if (!a.done && b.done) return -1;
-    if (a.done && !b.done) return 1;
-    return a.title.localeCompare(b.title);
-  });
+  return items.map((item: { createdAt: { toISOString: () => never; }; }) => ({
+    ...item,
+    createdAt: item.createdAt.toISOString(),
+  })) as ItemType[];
+}
+
+export default async function ListPage() {
+  const items = await getWishlistItems();
 
   return (
     <section>
-      <h2 className="h4 mb-4">
-        <i className="bi bi-list-stars me-2"></i>
-        Wishlist Anda
-      </h2>
-      <ItemList items={sortedItems} setItems={setItems} />
+      <h2 className="h4 mb-4">Wishlist Anda (dari Database)</h2>
+
+      <Suspense fallback={<p>Loading...</p>}>
+        <ItemList items={items} />
+      </Suspense>
     </section>
   );
 }

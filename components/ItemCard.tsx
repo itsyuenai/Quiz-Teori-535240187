@@ -2,13 +2,15 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
+// 1. TIPE DATA DIPERBARUI
 type Item = {
-  id: string;
+  id: number; // <- Diubah dari string
   title: string;
   description?: string;
   createdAt: string;
   done?: boolean;
   priority?: boolean;
+  category?: string; // <- Ditambahkan agar cocok
 };
 
 export default function ItemCard({
@@ -18,9 +20,10 @@ export default function ItemCard({
   onTogglePriority,
 }: {
   item: Item;
-  onDelete: (id: string) => void;
-  onToggleDone: (id: string) => void;
-  onTogglePriority: (id: string) => void;
+  // 2. TIPE FUNGSI DIPERBARUI
+  onDelete: (id: number) => void; // <- Diubah dari string
+  onToggleDone: (id: number) => void; // <- Diubah dari string
+  onTogglePriority: (id: number) => void; // <- Diubah dari string
 }) {
   const router = useRouter();
 
@@ -33,13 +36,13 @@ export default function ItemCard({
       }}
     >
       <div className="card-body d-flex justify-content-between align-items-start">
-        <div style={{ maxWidth: "75%" }}>
-
+        <div style={{ maxWidth: '75%' }}>
           {/* JUDUL → LINK KE DETAIL */}
           <button
+            // 3. LINK DIPERBARUI (ID sekarang number)
             onClick={() => router.push(`/list/${item.id}`)}
             className="h5 bg-transparent border-0 p-0 text-decoration-none mb-1"
-            style={{ cursor: "pointer", textAlign: "left" }}
+            style={{ cursor: 'pointer', textAlign: 'left' }}
           >
             {item.priority && (
               <i className="bi bi-star-fill me-2 text-warning"></i>
@@ -75,7 +78,6 @@ export default function ItemCard({
 
         {/* BAGIAN KANAN TOMBOL */}
         <div className="d-flex flex-column align-items-end">
-
           {/* Toggle selesai */}
           <button
             className="btn btn-sm btn-outline-secondary mb-2"
@@ -83,12 +85,12 @@ export default function ItemCard({
           >
             {item.done ? (
               <>
-                <i className="bi bi-arrow-counterclockwise me-1"></i>
+                {/* <i className="bi bi-arrow-counterclockwise me-1"></i> */}
                 Batalkan
               </>
             ) : (
               <>
-                <i className="bi bi-check2-circle me-1"></i>
+                {/* <i className="bi bi-check2-circle me-1"></i> */}
                 Selesai
               </>
             )}
@@ -101,11 +103,13 @@ export default function ItemCard({
           >
             {item.priority ? (
               <>
-                <i className="bi bi-star me-1"></i> Lepas Prioritas
+                {/* <i className="bi bi-star me-1"></i>  */}
+                Lepas Prioritas
               </>
             ) : (
               <>
-                <i className="bi bi-star-fill me-1"></i> Jadikan Utama
+                {/* <i className="bi bi-star-fill me-1"></i>  */}
+                Jadikan Utama
               </>
             )}
           </button>
@@ -115,9 +119,9 @@ export default function ItemCard({
             className="btn btn-sm btn-outline-danger"
             onClick={() => onDelete(item.id)}
           >
-            <i className="bi bi-trash"></i>
+            {/* <i className="bi bi-trash"></i> */}
+            Hapus
           </button>
-
         </div>
       </div>
     </div>

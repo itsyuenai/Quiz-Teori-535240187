@@ -1,32 +1,23 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ItemCard from './ItemCard';
 
 type ItemType = {
-  id: string;
+  id: number;
   title: string;
-  description?: string;
+  description: string | null;
   createdAt: string;
-  done?: boolean;
-  priority?: boolean;
-  category?: string;
+  done: boolean;
+  priority: boolean;
+  category: string | null;
 };
 
-function generateNumericId() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-export default function ItemList({
-  items,
-  setItems,
-}: {
-  items: ItemType[];
-  setItems: React.Dispatch<React.SetStateAction<ItemType[]>>;
-}) {
+export default function ItemList({ items }: { items: ItemType[] }) {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [category, setCategory] = useState('Umum');
-
   const [search, setSearch] = useState('');
   const [grid, setGrid] = useState(false);
 
@@ -47,44 +38,52 @@ export default function ItemList({
     e.preventDefault();
     if (!title.trim()) return;
 
-    const newItem: ItemType = {
-      id: generateNumericId(),
-      title: title.trim(),
-      description: desc.trim(),
-      createdAt: new Date().toISOString(),
-      done: false,
-      priority: false,
-      category,
-    };
-
-    const res = await fetch('/api/wishlist', {
+    await fetch('/api/wishlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newItem),
+      body: JSON.stringify({
+        title: title.trim(),
+        description: desc.trim(),
+        category,
+      }),
     });
 
-    const saved = await res.json();
-
-    setItems(prev => [saved, ...prev]);
-
+    router.refresh();
     setTitle('');
     setDesc('');
   }
 
-  function deleteItem(id: string) {
-    setItems(prev => prev.filter(it => it.id !== id));
+  async function deleteItem(id: number) {
+    if (!confirm('Apakah Anda yakin ingin menghapus item ini?')) return;
+
+    await fetch(`/api/wishlist/${id}`, { method: 'DELETE' });
+    router.refresh();
   }
 
-  function toggleDone(id: string) {
-    setItems(prev =>
-      prev.map(it => (it.id === id ? { ...it, done: !it.done } : it))
-    );
+  async function toggleDone(id: number) {
+    const item = items.find((it) => it.id === id);
+    if (!item) return;
+
+    await fetch(`/api/wishlist/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done: !item.done }),
+    });
+
+    router.refresh();
   }
 
-  function togglePriority(id: string) {
-    setItems(prev =>
-      prev.map(it => (it.id === id ? { ...it, priority: !it.priority } : it))
-    );
+  async function togglePriority(id: number) {
+    const item = items.find((it) => it.id === id);
+    if (!item) return;
+
+    await fetch(`/api/wishlist/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priority: !item.priority }),
+    });
+
+    router.refresh();
   }
 
   return (
@@ -111,17 +110,14 @@ export default function ItemList({
 
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
-          <h5 className="fw-bold mb-3">
-            <i className="bi bi-plus-circle me-2"></i>
-            Tambah Wishlist
-          </h5>
+          <h5 className="fw-bold mb-3">Tambah Wishlist</h5>
 
           <form onSubmit={addItem} className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Judul</label>
               <input
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 className="form-control"
               />
             </div>
@@ -130,7 +126,7 @@ export default function ItemList({
               <label className="form-label">Catatan</label>
               <input
                 value={desc}
-                onChange={e => setDesc(e.target.value)}
+                onChange={(e) => setDesc(e.target.value)}
                 className="form-control"
               />
             </div>
@@ -151,9 +147,7 @@ export default function ItemList({
             </div>
 
             <div className="col-12">
-              <button className="btn btn-dark">
-                <i className="bi bi-plus-lg me-1"></i> Tambah
-              </button>
+              <button className="btn btn-dark">Tambah</button>
             </div>
           </form>
         </div>
@@ -163,11 +157,15 @@ export default function ItemList({
         <div className="alert alert-secondary">Tidak ada hasil.</div>
       ) : (
         <div className={grid ? 'row g-3' : ''}>
-          {paginated.map(it =>
+          {paginated.map((it) =>
             grid ? (
               <div className="col-md-6 col-lg-4" key={it.id}>
                 <ItemCard
-                  item={it}
+                  item={{
+                    ...it,
+                    description: it.description ?? undefined,
+                    category: it.category ?? undefined,
+                  }}
                   onDelete={deleteItem}
                   onToggleDone={toggleDone}
                   onTogglePriority={togglePriority}
@@ -176,7 +174,11 @@ export default function ItemList({
             ) : (
               <ItemCard
                 key={it.id}
-                item={it}
+                item={{
+                  ...it,
+                  description: it.description ?? undefined,
+                  category: it.category ?? undefined,
+                }}
                 onDelete={deleteItem}
                 onToggleDone={toggleDone}
                 onTogglePriority={togglePriority}

@@ -1,17 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-model Wishlist {
-  id          Int      @id @default(autoincrement())
+// Model ini HARUS cocok dengan ItemType di frontend
+model WishlistItem {
+  id          Int      @id @default(autoincrement()) // Biarkan DB membuat ID (number)
   title       String
   description String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) // Biarkan DB mengatur timestamp
   done        Boolean  @default(false)
   priority    Boolean  @default(false)
   category    String?  @default("Umum")
